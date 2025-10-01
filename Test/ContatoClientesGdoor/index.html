@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDOOR - Gerenciador de Contatos WhatsApp</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header-section">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-whatsapp me-2"></i>GDOOR - Gerenciador WhatsApp
+                </h1>
+                <div>
+                    <button class="btn btn-light me-2" onclick="DataManager.exportData()">
+                        <i class="fas fa-download me-1"></i>Exportar Dados
+                    </button>
+                    <button class="btn btn-warning me-2" onclick="DataManager.saveJSONFile()">
+                        <i class="fas fa-save me-1"></i>Salvar JSON
+                    </button>
+                    <button class="btn btn-success" onclick="WhatsAppSender.sendAllMessages()">
+                        <i class="fas fa-paper-plane me-1"></i>Enviar Todas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Loading -->
+        <div id="loading" class="loading text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Carregando dados...</p>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Total Empresas</h6>
+                                <h3 id="totalCompanies" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-building fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Pendentes</h6>
+                                <h3 id="pendingCount" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Enviadas</h6>
+                                <h3 id="sentCount" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-check fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Responderam</h6>
+                                <h3 id="repliedCount" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-reply fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Ações -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Buscar empresa..." onkeyup="UI.applyFilters()">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="cityFilter" onchange="UI.applyFilters()">
+                    <option value="">Todas as cidades</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="statusFilter" onchange="UI.applyFilters()">
+                    <option value="">Todos os status</option>
+                    <option value="pending">Pendente</option>
+                    <option value="sent">Enviada</option>
+                    <option value="replied">Respondeu</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-primary w-100" onclick="UI.consultAllCNPJ()">
+                    <i class="fas fa-external-link-alt me-1"></i>Abrir Todos CNPJs
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-success w-100" onclick="APIConsulter.updateAllCompanies()">
+                    <i class="fas fa-sync me-1"></i>Atualizar Dados API
+                </button>
+            </div>
+            <div class="col-md-1">
+                <button class="btn btn-outline-success w-100" onclick="UI.toggleMessageTemplate()">
+                    <i class="fas fa-edit me-1"></i>Editar
+                </button>
+            </div>
+        </div>
+
+        <!-- Template de Mensagem (Escondido por padrão) -->
+        <div class="row mb-4" id="messageTemplateSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>Template da Mensagem
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mensagem Template:</label>
+                                <textarea class="form-control" id="messageTemplate" rows="12" onkeyup="UI.updatePreview()">
+                                    Olá! Aqui é o Marcelo Gonçalves, representante da GDOOR Sistemas.
+
+                                    Soube que a *{EMPRESA}* enfrentou dificuldades no atendimento prestado por uma de nossas revendas parceiras.
+                                    Quero pedir desculpas em nome da GDOOR e me colocar à disposição para resolver qualquer pendência.
+
+                                    Nosso compromisso é garantir que vocês tenham todo o suporte necessário para aproveitar ao máximo o sistema GDOOR.
+
+                                    Gostaria de agendar uma conversa rápida com _{RESPONSAVEL}_ para:
+                                    • Entender o que aconteceu
+                                    • Resolver eventuais pendências
+                                    • Apresentar melhorias no sistema
+                                    • Reforçar nosso suporte direto, caso necessário
+
+                                    📅 Qual seria um bom horário para conversarmos?
+
+                                    Fico à disposição e agradeço pela oportunidade de retomar essa parceria com mais atenção e cuidado.
+                                </textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Preview da Mensagem:</label>
+                                <div class="message-preview" id="messagePreview"></div>
+                                <div class="mt-3">
+                                    <div class="alert alert-info">
+                                        <strong>Variáveis disponíveis:</strong><br>
+                                        <code>{EMPRESA}</code> - Nome da empresa<br>
+                                        <code>{RESPONSAVEL}</code> - Nome do responsável/sócio
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Empresas -->
+        <div class="row">
+            <div class="col-12">
+                <div id="companiesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar empresa -->
+    <div class="modal fade" id="editCompanyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Editar Informações da Empresa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editIndex">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Nome da Empresa</label>
+                            <input type="text" class="form-control" id="editCompanyName">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-control cnpj-input" id="editCNPJ" readonly>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Telefone WhatsApp</label>
+                            <input type="text" class="form-control" id="editPhone" placeholder="(75) 99999-9999">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control" id="editCity">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Responsável/Sócio</label>
+                            <input type="text" class="form-control" id="editOwner" placeholder="João / Maria">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" placeholder="contato@empresa.com">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" id="editNotes" rows="3" placeholder="Anotações sobre a empresa..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="UI.saveCompany()">
+                        <i class="fas fa-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="dataManager.js"></script>
+    <script type="module" src="apiConsulter.js"></script>
+    <script type="module" src="whatsappSender.js"></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>

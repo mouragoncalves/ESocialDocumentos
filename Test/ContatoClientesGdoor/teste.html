@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela de Dados Financeiros</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        th {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f0f8ff;
+        }
+        
+        .status-ok {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .numero {
+            text-align: right;
+        }
+        
+        .filtros {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filtros input, .filtros select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .info {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dados Financeiros - Consignado vs eSocial</h1>
+        
+        <div class="info">
+            <strong>Total de registros:</strong> <span id="totalRegistros"></span>
+        </div>
+        
+        <div class="filtros">
+            <input type="text" id="filtroMatricula" placeholder="Filtrar por Matrícula">
+            <input type="text" id="filtroCpf" placeholder="Filtrar por CPF">
+            <select id="filtroStatus">
+                <option value="">Todos os Status</option>
+                <option value="OK">OK</option>
+                <option value="eSocial sem">eSocial sem dados</option>
+                <option value="Consignado sem">Consignado sem dados</option>
+                <option value="Valor maior">Diferenças de valores</option>
+            </select>
+            <button onclick="limparFiltros()">Limpar Filtros</button>
+        </div>
+        
+        <div class="table-container">
+            <table id="tabelaDados">
+                <thead>
+                    <tr>
+                        <th>Event ID</th>
+                        <th>Main Entity</th>
+                        <th>Entity Code</th>
+                        <th>Ano</th>
+                        <th>Mês</th>
+                        <th>CPF</th>
+                        <th>Matrícula</th>
+                        <th>C_Financeira</th>
+                        <th>C_Contrato</th>
+                        <th>C_Parcela</th>
+                        <th>E_Financeira</th>
+                        <th>E_Contrato</th>
+                        <th>E_Parcela</th>
+                        <th>Status Financeira</th>
+                        <th>Status Contrato</th>
+                        <th>Status Parcela</th>
+                        <th>Diferença Valor</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Dados do JSON - substitua aqui pelos seus dados reais
+        const dados = [
+  {
+    "EventId": 18194507,
+    "MainEntityCode": "101122",
+    "EntityCode": "105122",
+    "RelatedYear": 2025,
+    "RelatedMonth": 7,
+    "Cpf": "27549724806",
+    "Matricula": "APAC-Educ02092024R061742",
+    "C_Financeira": "329",
+    "C_Contrato": "0163103923FCD",
+    "C_Parcela": 26838.0,
+    "E_Financeira": "329",
+    "E_Contrato": "0163103923FCD",
+    "E_Parcela": 26838.0,
+    "ValidaFinanceira_Status": "OK",
+    "ValidaContrato_Status": "OK",
+    "ValidaParcela_Status": "OK",
+    "DiferencaValor": 0.0,
+    "Observacao": ""
+  },
+  {
+    "EventId": 18194447,
+    "MainEntityCode": "101122",
+    "EntityCode": "105122",
+    "RelatedYear": 2025,
+    "RelatedMonth": 7,
+    "Cpf": "07980017390",
+    "Matricula": "APAC-Educ06112024R905013",
+    "C_Financeira": "121",
+    "C_Contrato": "1529100769",
+    "C_Parcela": 21201.0,
+    "E_Financeira": "121",
+    "E_Contrato": "1529100769",
+    "E_Parcela": 21201.0,
+    "ValidaFinanceira_Status": "OK",
+    "ValidaContrato_Status": "OK",
+    "ValidaParcela_Status": "OK",
+    "DiferencaValor": 0.0,
+    "Observacao": ""
+  },
+  {
+    "EventId": 18187653,
+    "MainEntityCode": "101122",
+    "EntityCode": "105122",
+    "RelatedYear": 2025,
+    "RelatedMonth": 7,
+    "Cpf": "21463568800",
+    "Matricula": "APAC-Educ11022025R002102",
+    "C_Financeira": "341",
+    "C_Contrato": "2703348579",
+    "C_Parcela": 50834.0,
+    "E_Financeira": "341",
+    "E_Contrato": "2703348579",
+    "E_Parcela": 50834.0,
+    "ValidaFinanceira_Status": "OK",
+    "ValidaContrato_Status": "OK",
+    "ValidaParcela_Status": "OK",
+    "DiferencaValor": 0.0,
+    "Observacao": ""
+  },
+  {
+    "EventId": 18186518,
+    "MainEntityCode": "101122",
+    "EntityCode": "105122",
+    "RelatedYear": 2025,
+    "RelatedMonth": 7,
+    "Cpf": "21874178836",
+    "Matricula": "APAC-Educ23022024R365410",
+    "C_Financeira": "079",
+    "C_Contrato": "0128965587",
+    "C_Parcela": 95977.0,
+    "E_Financeira": "079",
+    "E_Contrato": "0128965587",
+    "E_Parcela": 95977.0,
+    "ValidaFinanceira_Status": "OK",
+    "ValidaContrato_Status": "OK",
+    "ValidaParcela_Status": "OK",
+    "DiferencaValor": 0.0,
+    "Observacao": ""
+  },
+  {
+    "EventId": 18188435,
+    "MainEntityCode": "101122",
+    "EntityCode": "102122",
+    "RelatedYear": 2025,
+    "RelatedMonth": 7,
+    "Cpf": "30272617890",
+    "Matricula": "AP-Educ01022006R1255",
+    "C_Financeira": "903",
+    "C_Contrato": "190300014008120",
+    "C_Parcela": 68088.0,
+    "E_Financeira": "903",
+    "E_Contrato": "190300014008120",
+    "E_Parcela": 68088.0,
+    "ValidaFinanceira_Status": "OK",
+    "ValidaContrato_Status": "OK",
+    "ValidaParcela_Status": "OK",
+    "DiferencaValor": 0.0,
+    "Observacao": ""
+  }
+        ];
+
+        let dadosFiltrados = [...dados];
+
+        function formatarNumero(valor) {
+            if (valor === null || valor === undefined) return '-';
+            if (typeof valor === 'number') {
+                return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+            return valor;
+        }
+
+        function formatarCpf(cpf) {
+            if (!cpf) return '-';
+            return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        }
+
+        function obterClasseStatus(status) {
+            if (status === 'OK') return 'status-ok';
+            if (status && (status.includes('sem') || status.includes('maior'))) return 'status-error';
+            return 'status-warning';
+        }
+
+        function renderizarTabela() {
+            const corpoTabela = document.getElementById('corpoTabela');
+            corpoTabela.innerHTML = '';
+
+            dadosFiltrados.forEach(item => {
+                const linha = document.createElement('tr');
+                
+                linha.innerHTML = `
+                    <td>${item.EventId || '-'}</td>
+                    <td>${item.MainEntityCode || '-'}</td>
+                    <td>${item.EntityCode || '-'}</td>
+                    <td class="numero">${item.RelatedYear || '-'}</td>
+                    <td class="numero">${item.RelatedMonth || '-'}</td>
+                    <td>${formatarCpf(item.Cpf)}</td>
+                    <td>${item.Matricula || '-'}</td>
+                    <td>${item.C_Financeira || '-'}</td>
+                    <td>${item.C_Contrato || '-'}</td>
+                    <td class="numero">${formatarNumero(item.C_Parcela)}</td>
+                    <td>${item.E_Financeira || '-'}</td>
+                    <td>${item.E_Contrato || '-'}</td>
+                    <td class="numero">${formatarNumero(item.E_Parcela)}</td>
+                    <td class="${obterClasseStatus(item.ValidaFinanceira_Status)}">${item.ValidaFinanceira_Status || '-'}</td>
+                    <td class="${obterClasseStatus(item.ValidaContrato_Status)}">${item.ValidaContrato_Status || '-'}</td>
+                    <td class="${obterClasseStatus(item.ValidaParcela_Status)}">${item.ValidaParcela_Status || '-'}</td>
+                    <td class="numero">${formatarNumero(item.DiferencaValor)}</td>
+                    <td>${item.Observacao || '-'}</td>
+                `;
+                
+                corpoTabela.appendChild(linha);
+            });
+
+            document.getElementById('totalRegistros').textContent = dadosFiltrados.length;
+        }
+
+        function aplicarFiltros() {
+            const filtroMatricula = document.getElementById('filtroMatricula').value.toLowerCase();
+            const filtroCpf = document.getElementById('filtroCpf').value.toLowerCase();
+            const filtroStatus = document.getElementById('filtroStatus').value;
+
+            dadosFiltrados = dados.filter(item => {
+                const matchMatricula = !filtroMatricula || (item.Matricula && item.Matricula.toLowerCase().includes(filtroMatricula));
+                const matchCpf = !filtroCpf || (item.Cpf && item.Cpf.includes(filtroCpf));
+                
+                let matchStatus = true;
+                if (filtroStatus) {
+                    matchStatus = 
+                        (item.ValidaFinanceira_Status && item.ValidaFinanceira_Status.includes(filtroStatus)) ||
+                        (item.ValidaContrato_Status && item.ValidaContrato_Status.includes(filtroStatus)) ||
+                        (item.ValidaParcela_Status && item.ValidaParcela_Status.includes(filtroStatus));
+                }
+
+                return matchMatricula && matchCpf && matchStatus;
+            });
+
+            renderizarTabela();
+        }
+
+        function limparFiltros() {
+            document.getElementById('filtroMatricula').value = '';
+            document.getElementById('filtroCpf').value = '';
+            document.getElementById('filtroStatus').value = '';
+            dadosFiltrados = [...dados];
+            renderizarTabela();
+        }
+
+        // Event listeners para filtros
+        document.getElementById('filtroMatricula').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtroCpf').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtroStatus').addEventListener('change', aplicarFiltros);
+
+        // Renderizar tabela inicial
+        renderizarTabela();
+    </script>
+</body>
+</html>

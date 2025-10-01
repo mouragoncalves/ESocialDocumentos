@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDOOR - Gerenciador de Contatos WhatsApp</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .company-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid #007bff;
+        }
+
+        .company-card:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .status-pending {
+            border-left-color: #ffc107;
+        }
+
+        .status-sent {
+            border-left-color: #28a745;
+        }
+
+        .status-replied {
+            border-left-color: #17a2b8;
+        }
+
+        .btn-whatsapp {
+            background-color: #25d366;
+            border-color: #25d366;
+            color: white;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: #1eb95a;
+            border-color: #1eb95a;
+            color: white;
+        }
+
+        .message-preview {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            border: 1px solid #dee2e6;
+        }
+
+        .cnpj-input {
+            font-family: monospace;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+
+        .stats-card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .company-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .action-buttons .btn {
+            margin: 0 2px;
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header-section">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-phone me-2"></i>GDOOR - Gerenciador de Contatos
+                </h1>
+                <div>
+                    <button class="btn btn-light me-2" onclick="exportData()">
+                        <i class="fas fa-download me-1"></i>Exportar Dados
+                    </button>
+                    <button class="btn btn-warning me-2" onclick="saveJSONFile()">
+                        <i class="fas fa-save me-1"></i>Salvar JSON
+                    </button>
+                    <button class="btn btn-success" onclick="sendAllMessages()">
+                        <i class="fas fa-paper-plane me-1"></i>Enviar Todas
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <!-- Loading -->
+        <div id="loading" class="loading text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+            </div>
+            <p class="mt-2">Carregando dados...</p>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card stats-card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Total Empresas</h6>
+                                <h3 id="totalCompanies" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-building fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Pendentes</h6>
+                                <h3 id="pendingCount" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-clock fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Enviadas</h6>
+                                <h3 id="sentCount" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-check fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">Responderam</h6>
+                                <h3 id="repliedCount" class="mb-0">0</h3>
+                            </div>
+                            <i class="fas fa-reply fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Ações -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchFilter" placeholder="Buscar empresa..."
+                        onkeyup="filterCompanies()">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="cityFilter" onchange="filterCompanies()">
+                    <option value="">Todas as cidades</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="statusFilter" onchange="filterCompanies()">
+                    <option value="">Todos os status</option>
+                    <option value="pending">Pendente</option>
+                    <option value="sent">Enviada</option>
+                    <option value="replied">Respondeu</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-outline-primary w-100" onclick="consultAllCNPJ()">
+                    <i class="fas fa-external-link-alt me-1"></i>Consultar Todos CNPJs
+                </button>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-success w-100" onclick="toggleMessageTemplate()">
+                    <i class="fas fa-edit me-1"></i>Editar Mensagem
+                </button>
+            </div>
+        </div>
+
+        <!-- Template de Mensagem (Escondido por padrão) -->
+        <div class="row mb-4" id="messageTemplateSection" style="display: none;">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-edit me-2"></i>Template da Mensagem
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Mensagem Template:</label>
+                                <textarea class="form-control" id="messageTemplate" rows="12" onkeyup="updatePreview()">
+Olá! Aqui é o Marcelo Gonçalves, representante da *GDOOR Sistemas*.
+
+Soube que a *_{EMPRESA}_* enfrentou dificuldades no atendimento prestado por uma de nossas revendas parceiras.
+Quero pedir desculpas em nome da GDOOR e me colocar à disposição para resolver qualquer pendência.
+
+Nosso compromisso é garantir que vocês tenham todo o suporte necessário para aproveitar ao máximo o sistema GDOOR.
+
+Gostaria de agendar uma conversa rápida com _{RESPONSAVEL}_ para:
+• Entender o que aconteceu
+• Resolver eventuais pendências
+• Apresentar melhorias no sistema
+• Reforçar nosso suporte direto, caso necessário
+
+📅 Qual seria um bom horário para conversarmos?
+
+Fico à disposição e agradeço pela oportunidade de retomar essa parceria com mais atenção e cuidado.
+                                </textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Preview da Mensagem:</label>
+                                <div class="message-preview" id="messagePreview"></div>
+                                <div class="mt-3">
+                                    <div class="alert alert-info">
+                                        <strong>Variáveis disponíveis:</strong><br>
+                                        <code>{EMPRESA}</code> - Nome da empresa<br>
+                                        <code>{RESPONSAVEL}</code> - Nome do responsável/sócio
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Empresas -->
+        <div class="row">
+            <div class="col-12">
+                <div id="companiesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para editar empresa -->
+    <div class="modal fade" id="editCompanyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Editar Informações da Empresa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editIndex">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label class="form-label">Nome da Empresa</label>
+                            <input type="text" class="form-control" id="editCompanyName">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" class="form-control cnpj-input" id="editCNPJ" readonly>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Telefone WhatsApp</label>
+                            <input type="text" class="form-control" id="editPhone" placeholder="(75) 99999-9999">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Cidade</label>
+                            <input type="text" class="form-control" id="editCity">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Responsável/Sócio</label>
+                            <input type="text" class="form-control" id="editOwner" placeholder="Nome do responsável">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail" placeholder="contato@empresa.com">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Observações</label>
+                        <textarea class="form-control" id="editNotes" rows="3"
+                            placeholder="Anotações sobre a empresa..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="saveCompany()">
+                        <i class="fas fa-save me-1"></i>Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let companies = [];
+        let filteredCompanies = [];
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function () {
+            loadData();
+        });
+
+        async function loadData() {
+            try {
+                document.getElementById('loading').classList.add('show');
+
+                // Carrega dados do arquivo JSON
+                const response = await fetch('companies_data.json');
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar dados');
+                }
+
+                companies = await response.json();
+                filteredCompanies = [...companies];
+
+                // Inicializa a aplicação
+                init();
+
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Erro ao carregar dados das empresas. Verifique se o arquivo companies_data.json está presente.');
+            } finally {
+                document.getElementById('loading').classList.remove('show');
+            }
+        }
+
+        function init() {
+            populateCityFilter();
+            renderCompanies();
+            updateStats();
+            updatePreview();
+            updateSaveButton(); // Inicializa o botão de salvar
+        }
+
+        function populateCityFilter() {
+            const cities = [...new Set(companies.map(c => c.city))].sort();
+            const select = document.getElementById('cityFilter');
+            select.innerHTML = '<option value="">Todas as cidades</option>';
+            cities.forEach(city => {
+                select.innerHTML += `<option value="${city}">${city}</option>`;
+            });
+        }
+
+        function filterCompanies() {
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            const city = document.getElementById('cityFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            filteredCompanies = companies.filter(company => {
+                const matchSearch = company.name.toLowerCase().includes(search) ||
+                    company.cnpj.includes(search) ||
+                    (company.owner && company.owner.toLowerCase().includes(search));
+                const matchCity = !city || company.city === city;
+                const matchStatus = !status || company.status === status;
+
+                return matchSearch && matchCity && matchStatus;
+            });
+
+            renderCompanies();
+        }
+
+        function renderCompanies() {
+            const container = document.getElementById('companiesList');
+            container.innerHTML = '';
+
+            if (filteredCompanies.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Nenhuma empresa encontrada</h5>
+                        <p class="text-muted">Tente ajustar os filtros de busca</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredCompanies.forEach((company, index) => {
+                const realIndex = companies.findIndex(c => c.serial === company.serial);
+                const statusClass = `status-${company.status}`;
+                const statusIcon = {
+                    'pending': 'fas fa-clock text-warning',
+                    'sent': 'fas fa-check text-success',
+                    'replied': 'fas fa-reply text-info'
+                }[company.status];
+
+                const phoneFormatted = formatPhoneForWhatsApp(company.phone);
+                const hasValidPhone = phoneFormatted && phoneFormatted !== '0';
+
+                container.innerHTML += `
+                    <div class="card company-card ${statusClass} mb-3">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-5">
+                                    <h6 class="card-title company-name mb-1">${company.name}</h6>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-id-card me-1"></i>CNPJ: ${company.cnpj}
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-map-marker-alt me-1"></i>${company.city}, ${company.uf}
+                                    </small>
+                                    ${company.owner ? `
+                                        <small class="text-success d-block">
+                                            <i class="fas fa-user me-1"></i><strong>Responsável:</strong> ${company.owner}
+                                        </small>
+                                    ` : ''}
+                                </div>
+                                <div class="col-md-3">
+                                    <small class="d-block">
+                                        <i class="fas fa-phone me-1"></i><strong>Telefone:</strong> ${company.phone}
+                                    </small>
+                                    ${company.email ? `
+                                        <small class="d-block">
+                                            <i class="fas fa-envelope me-1"></i><strong>Email:</strong> ${company.email}
+                                        </small>
+                                    ` : ''}
+                                    <span class="badge bg-secondary mt-1">
+                                        <i class="${statusIcon} me-1"></i>${getStatusText(company.status)}
+                                    </span>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="editCompany(${realIndex})" 
+                                                title="Editar informações">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="consultCNPJ('${company.cnpj}')" 
+                                                title="Consultar CNPJ">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="testPhone(${realIndex})" 
+                                                title="Testar formatação do telefone">
+                                            <i class="fas fa-phone-alt"></i>
+                                        </button>
+                                        ${hasValidPhone ? `
+                                            <button class="btn btn-sm btn-whatsapp" onclick="sendWhatsApp(${realIndex})" 
+                                                    title="Enviar WhatsApp">
+                                                <i class="fab fa-whatsapp"></i>
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-sm btn-secondary" disabled title="Telefone inválido">
+                                                <i class="fas fa-phone-slash"></i>
+                                            </button>
+                                        `}
+                                        <button class="btn btn-sm btn-outline-success" onclick="markAsReplied(${realIndex})" 
+                                                title="Marcar como respondeu">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            ${company.notes ? `
+                                <div class="row mt-2">
+                                    <div class="col-12">
+                                        <div class="alert alert-light py-2 mb-0">
+                                            <small><strong>Obs:</strong> ${company.notes}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('totalCompanies').textContent = companies.length;
+            document.getElementById('pendingCount').textContent = companies.filter(c => c.status === 'pending').length;
+            document.getElementById('sentCount').textContent = companies.filter(c => c.status === 'sent').length;
+            document.getElementById('repliedCount').textContent = companies.filter(c => c.status === 'replied').length;
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'pending': 'Pendente',
+                'sent': 'Enviada',
+                'replied': 'Respondeu'
+            };
+            return texts[status] || status;
+        }
+
+        function formatPhoneForWhatsApp(phone) {
+            if (!phone || phone === '0' || phone === '') return null;
+
+            // Remove todos os caracteres não numéricos
+            let cleaned = phone.replace(/\D/g, '');
+
+            // Se começar com 0, remove
+            if (cleaned.startsWith('0')) {
+                cleaned = cleaned.substring(1);
+            }
+
+            // Casos especiais para Bahia (DDD 75/71)
+            if (cleaned.length === 11 && (cleaned.startsWith('75') || cleaned.startsWith('71'))) {
+                // Número já tem DDD, adiciona código do país
+                cleaned = '55' + cleaned;
+            } else if (cleaned.length === 10 && (cleaned.startsWith('75') || cleaned.startsWith('71'))) {
+                // Número com DDD mas sem o 9 do celular, adiciona
+                cleaned = '55' + cleaned.substring(0, 2) + '9' + cleaned.substring(2);
+            } else if (cleaned.length === 9 && !cleaned.startsWith('55')) {
+                // Só o número do celular, adiciona DDD 75 e código do país
+                cleaned = '5575' + cleaned;
+            } else if (cleaned.length === 8 && !cleaned.startsWith('55')) {
+                // Número fixo, adiciona DDD 75, 9 e código do país
+                cleaned = '55759' + cleaned;
+            } else if (!cleaned.startsWith('55')) {
+                // Qualquer outro caso, tenta adicionar 55 + 75
+                if (cleaned.length >= 8) {
+                    cleaned = '5575' + cleaned;
+                }
+            }
+
+            // Verifica se tem tamanho válido para WhatsApp (12-15 dígitos)
+            if (cleaned.length >= 12 && cleaned.length <= 15 && cleaned.startsWith('55')) {
+                return cleaned;
+            }
+
+            console.log('Telefone inválido:', phone, '-> cleaned:', cleaned);
+            return null;
+        }
+
+        function updatePreview() {
+            const template = document.getElementById('messageTemplate').value;
+            const preview = template
+                .replace(/{EMPRESA}/g, 'EXEMPLO EMPRESA LTDA')
+                .replace(/{RESPONSAVEL}/g, 'Sr. João Silva');
+            document.getElementById('messagePreview').textContent = preview;
+        }
+
+        function toggleMessageTemplate() {
+            const section = document.getElementById('messageTemplateSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function editCompany(index) {
+            const company = companies[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editCompanyName').value = company.name;
+            document.getElementById('editCNPJ').value = company.cnpj;
+            document.getElementById('editPhone').value = company.phone;
+            document.getElementById('editCity').value = company.city;
+            document.getElementById('editOwner').value = company.owner || '';
+            document.getElementById('editEmail').value = company.email || '';
+            document.getElementById('editNotes').value = company.notes || '';
+
+            new bootstrap.Modal(document.getElementById('editCompanyModal')).show();
+        }
+
+        function saveCompany() {
+            const index = document.getElementById('editIndex').value;
+            companies[index].name = document.getElementById('editCompanyName').value;
+            companies[index].phone = document.getElementById('editPhone').value;
+            companies[index].city = document.getElementById('editCity').value;
+            companies[index].owner = document.getElementById('editOwner').value;
+            companies[index].email = document.getElementById('editEmail').value;
+            companies[index].notes = document.getElementById('editNotes').value;
+
+            bootstrap.Modal.getInstance(document.getElementById('editCompanyModal')).hide();
+            filterCompanies();
+            updateStats();
+
+            // Salva no localStorage como backup
+            localStorage.setItem('gdoor_companies', JSON.stringify(companies));
+
+            // Marca que houve alterações
+            markDataChanged();
+        }
+
+        function consultCNPJ(cnpj) {
+            const cleanCNPJ = cnpj.replace(/\D/g, '');
+            const url = `https://cnpj.biz/${cleanCNPJ}`;
+            window.open(url, '_blank');
+        }
+
+        function consultAllCNPJ() {
+            const count = companies.length;
+            if (confirm(`Isso abrirá ${count} abas do navegador (uma para cada empresa). Deseja continuar?`)) {
+                companies.forEach((company, index) => {
+                    setTimeout(() => {
+                        consultCNPJ(company.cnpj);
+                    }, index * 1500); // 1.5 segundos entre cada abertura
+                });
+            }
+        }
+
+        function sendWhatsApp(index) {
+            const company = companies[index];
+            const phone = formatPhoneForWhatsApp(company.phone);
+
+            if (!phone) {
+                alert(`Telefone inválido para WhatsApp: ${company.phone}\n\nPor favor, edite a empresa e corrija o telefone.`);
+                return;
+            }
+
+            const template = document.getElementById('messageTemplate').value;
+            const message = template
+                .replace(/{EMPRESA}/g, company.name)
+                .replace(/{RESPONSAVEL}/g, company.owner || 'o responsável');
+
+            // URL do WhatsApp
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+
+            // Mostra aviso sobre como proceder
+            const confirmSend = confirm(
+                `🚀 ENVIANDO MENSAGEM PARA:\n${company.name}\n\n` +
+                `📱 Telefone: ${phone}\n\n` +
+                `ℹ️ O WhatsApp vai abrir com a mensagem já digitada.\n` +
+                `Você só precisa clicar em ENVIAR no WhatsApp.\n\n` +
+                `Continuar?`
+            );
+
+            if (!confirmSend) return;
+
+            // Abre o WhatsApp
+            window.open(whatsappUrl, '_blank');
+
+            // Marca como enviada
+            companies[index].status = 'sent';
+            filterCompanies();
+            updateStats();
+
+            // Salva no localStorage
+            localStorage.setItem('gdoor_companies', JSON.stringify(companies));
+
+            // Marca que houve alterações
+            markDataChanged();
+        }
+
+        function markAsReplied(index) {
+            companies[index].status = 'replied';
+            filterCompanies();
+            updateStats();
+
+            // Salva no localStorage
+            localStorage.setItem('gdoor_companies', JSON.stringify(companies));
+
+            // Marca que houve alterações
+            markDataChanged();
+        }
+
+        let dataChanged = false;
+        let changeCount = 0;
+
+        function markDataChanged() {
+            dataChanged = true;
+            changeCount++;
+            updateSaveButton();
+
+            // Auto-salva a cada 10 alterações
+            if (changeCount >= 10) {
+                autoSaveJSON();
+            }
+        }
+
+        function updateSaveButton() {
+            const saveBtn = document.querySelector('[onclick="saveJSONFile()"]');
+            if (saveBtn) {
+                if (dataChanged) {
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Salvar JSON (' + changeCount + ')';
+                    saveBtn.className = 'btn btn-danger me-2'; // Fica vermelho quando há alterações
+                } else {
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Salvar JSON';
+                    saveBtn.className = 'btn btn-warning me-2';
+                }
+            }
+        }
+
+        function autoSaveJSON() {
+            saveJSONFile();
+            changeCount = 0;
+            dataChanged = false;
+            updateSaveButton();
+
+            // Só mostra toast no auto-save
+            showToast(`Auto-save: ${companies.filter(c => c.status !== 'pending').length} empresas processadas`, 'info');
+        }
+
+        function saveJSONFile() {
+            try {
+                const dataStr = JSON.stringify(companies, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'companies_data.json';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+
+                // Reset contador
+                dataChanged = false;
+                changeCount = 0;
+                updateSaveButton();
+
+                console.log('Arquivo JSON salvo');
+            } catch (error) {
+                console.error('Erro ao salvar arquivo JSON:', error);
+                alert('Erro ao salvar arquivo JSON');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            // Toast mais sutil, só aparece no canto e some rapidamente
+            const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type === 'success' ? 'success' : 'info'} alert-dismissible fade show`;
+            toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px; opacity: 0.9;';
+            toast.innerHTML = `
+                <small><i class="fas fa-info-circle me-1"></i>${message}</small>
+                <button type="button" class="btn-close btn-close-sm" data-bs-dismiss="alert"></button>
+            `;
+
+            toastContainer.appendChild(toast);
+
+            // Remove o toast após 2 segundos (mais rápido)
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 2000);
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toastContainer';
+            container.style.cssText = 'position: fixed; top: 0; right: 0; z-index: 9999; padding: 20px;';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        function sendAllMessages() {
+            const pendingCompanies = companies.filter(c => c.status === 'pending' && formatPhoneForWhatsApp(c.phone));
+
+            if (pendingCompanies.length === 0) {
+                alert('Não há empresas pendentes com telefones válidos.');
+                return;
+            }
+
+            const confirmMessage = `🚀 ENVIO EM MASSA\n\n` +
+                `📊 ${pendingCompanies.length} empresas serão contactadas\n` +
+                `⏰ Intervalo de 3 segundos entre cada mensagem\n\n` +
+                `ℹ️ IMPORTANTE:\n` +
+                `• O WhatsApp vai abrir várias abas\n` +
+                `• Cada mensagem já estará digitada\n` +
+                `• Você precisa clicar ENVIAR em cada uma\n\n` +
+                `Continuar?`;
+
+            if (confirm(confirmMessage)) {
+                alert('🚀 Iniciando envio em massa!\n\n📱 As abas do WhatsApp vão abrir em sequência.\n\n⚡ Fique atento para clicar ENVIAR em cada uma.');
+
+                pendingCompanies.forEach((company, index) => {
+                    setTimeout(() => {
+                        const realIndex = companies.findIndex(c => c.serial === company.serial);
+                        const phone = formatPhoneForWhatsApp(company.phone);
+                        const template = document.getElementById('messageTemplate').value;
+                        const message = template
+                            .replace(/{EMPRESA}/g, company.name)
+                            .replace(/{RESPONSAVEL}/g, company.owner || 'o responsável');
+
+                        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+                        window.open(whatsappUrl, '_blank');
+
+                        // Marca como enviada
+                        companies[realIndex].status = 'sent';
+                        filterCompanies();
+                        updateStats();
+
+                    }, index * 3000); // 3 segundos entre cada envio
+                });
+
+                // Salva no localStorage e arquivo JSON apenas no final
+                setTimeout(() => {
+                    localStorage.setItem('gdoor_companies', JSON.stringify(companies));
+                    // Auto-save apenas no final do envio em massa
+                    autoSaveJSON();
+                }, pendingCompanies.length * 3000 + 1000);
+            }
+        }
+
+        function testPhone(index) {
+            const company = companies[index];
+            const originalPhone = company.phone;
+            const formattedPhone = formatPhoneForWhatsApp(originalPhone);
+
+            let message = `TESTE DE FORMATAÇÃO:\n\n`;
+            message += `Empresa: ${company.name}\n`;
+            message += `Telefone original: ${originalPhone}\n`;
+            message += `Telefone formatado: ${formattedPhone || 'INVÁLIDO'}\n\n`;
+
+            if (formattedPhone) {
+                message += `✅ Telefone válido para WhatsApp\n`;
+                message += `URL que será aberta:\nhttps://wa.me/${formattedPhone}`;
+            } else {
+                message += `❌ Telefone inválido\n`;
+                message += `Corrija o telefone para o formato:\n`;
+                message += `(75) 99999-9999 ou 75999999999`;
+            }
+
+            alert(message);
+        }
+
+        function exportData() {
+            const dataStr = JSON.stringify(companies, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `gdoor_companies_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+
+</html>
