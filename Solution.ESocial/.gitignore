@@ -1,0 +1,34 @@
+# Build output
+bin/
+obj/
+*.user
+
+# Rider / VS / VSCode
+.idea/
+.vs/
+.vscode/
+*.DotSettings.user
+
+# NuGet
+*.nupkg
+.nuget/
+
+# EF Core migrations (opcional — remova se quiser versionar as migrations)
+# src/ESocial.Infrastructure/Persistence/Migrations/
+
+# ──────────────────────────────────────────────────────────────
+# AMBIENTES SENSÍVEIS — Staging e Production NÃO vão ao git
+# Copie o .example correspondente e preencha os valores reais.
+# ──────────────────────────────────────────────────────────────
+src/ESocial.Api/appsettings.Staging.json
+src/ESocial.Api/appsettings.Production.json
+
+# Certificados digitais
+*.pfx
+*.p12
+*.cer
+*.key
+certs/
+
+# Secrets locais do .NET (User Secrets)
+**/secrets.json

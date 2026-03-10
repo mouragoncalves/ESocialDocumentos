@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ESocial.Api/ESocial.Api.csproj" />
+    <Project Path="src/ESocial.Application/ESocial.Application.csproj" />
+    <Project Path="src/ESocial.Domain/ESocial.Domain.csproj" />
+    <Project Path="src/ESocial.Infrastructure.WebService/ESocial.Infrastructure.WebService.csproj" />
+    <Project Path="src/ESocial.Infrastructure/ESocial.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ESocial.Application.Tests/ESocial.Application.Tests.csproj" />
+    <Project Path="tests/ESocial.Domain.Tests/ESocial.Domain.Tests.csproj" />
+    <Project Path="tests/ESocial.Integration.Tests/ESocial.Integration.Tests.csproj" />
+  </Folder>
+</Solution>
