@@ -7,6 +7,7 @@ using ESocial.Infrastructure.WebService.Adapters;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,7 +47,14 @@ builder.Services.AddSingleton<IXmlValidator>(new XsdValidator(schemasPath));
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "eSocial API";
+        options.Theme = ScalarTheme.DeepSpace;
+    });
+}
 
 app.UseHttpsRedirection();
 app.MapControllers();
