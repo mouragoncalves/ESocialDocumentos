@@ -309,7 +309,7 @@ dotnet run --project src/ESocial.Api --launch-profile Staging
 | Staging | `http://localhost:5053` | `https://localhost:7142` |
 | Production | `http://localhost:5054` | `https://localhost:7143` |
 
-A documentação OpenAPI fica disponível em: `http://localhost:5052/openapi/v1.json`
+O Swagger UI fica disponível em: `http://localhost:5052/swagger` (apenas em Development)
 
 ---
 

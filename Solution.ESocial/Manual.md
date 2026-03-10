@@ -1,28 +1,23 @@
 # Manual do Sistema eSocial — Stark Industries
 
-> **Para quem é este manual?**
-> Para qualquer pessoa que precisa entender ou usar este sistema — trabalhado com obrigações trabalhistas antes. Se você conhece os personagens da Marvel e da DC, vai se sentir em casa.
-
----
-
 ## A empresa que usaremos como exemplo
 
-**Stark Industries** é uma empresa fictícia de tecnologia avançada fundada por **Tony Stark** (o Homem de Ferro). A empresa tem filiais em várias cidades, centenas de funcionários e é obrigada por lei a enviar informações trabalhistas ao governo brasileiro pelo sistema **eSocial**.
+**Stark Industries** é uma empresa fictícia de tecnologia avançada fundada por **Tony Stark (Homem de Ferro)**. A empresa tem filiais em várias cidades, centenas de funcionários e é obrigada por lei a enviar informações trabalhistas ao governo brasileiro pelo sistema **eSocial**.
 
 ### Equipe que usa o sistema
 
 | Personagem | Papel na empresa | O que faz no sistema |
 |---|---|---|
-| **Tony Stark** | Dono / CEO | Assina digitalmente os documentos (tem o certificado) |
+| **Tony Stark** (Homem de Ferro) | Dono / CEO | Assina digitalmente os documentos (tem o certificado) |
 | **Pepper Potts** | Diretora de RH | Aprova os eventos antes do envio |
-| **Peter Parker** | Analista de TI | Opera o sistema no dia a dia |
-| **Bruce Banner** | Contador | Gera os eventos de folha de pagamento |
-| **Natasha Romanoff** | Gerente de RH | Cadastra admissões e demissões |
-| **Steve Rogers** | Supervisor de Operações | Consulta os resultados dos envios |
-| **Clark Kent** | Funcionário | Aparece nos eventos como trabalhador |
-| **Bruce Wayne** | CFO (Diretor Financeiro) | Aprova a folha |
-| **Barry Allen** | Analista de Folha | Lança as rubricas salariais |
-| **Diana Prince** | Jurídica | Verifica conformidade das informações |
+| **Peter Parker** (Homem-Aranha) | Analista de TI | Opera o sistema no dia a dia |
+| **Bruce Banner** (Hulk) | Contador | Gera os eventos de folha de pagamento |
+| **Natasha Romanoff** (Viúva Negra) | Gerente de RH | Cadastra admissões e demissões |
+| **Steve Rogers** (Capitão América) | Supervisor de Operações | Consulta os resultados dos envios |
+| **Clark Kent** (Super-Homem) | Funcionário | Aparece nos eventos como trabalhador |
+| **Bruce Wayne** (Batman) | CFO (Diretor Financeiro) | Aprova a folha |
+| **Barry Allen** (Flash) | Analista de Folha | Lança as rubricas salariais |
+| **Diana Prince** (Mulher-Maravilha) | Jurídica | Verifica conformidade das informações |
 
 ---
 
@@ -32,15 +27,11 @@ Imagine que toda vez que a **Stark Industries** contrata alguém, demite, paga s
 
 O **eSocial** veio para unificar tudo isso. Agora a empresa manda tudo em um lugar só, num formato específico, e o governo recebe de forma organizada.
 
-**A analogia simples:** Pense no eSocial como o **WhatsApp do governo**. A empresa manda mensagens (chamadas de *eventos*) em um formato específico (XML), e o governo responde confirmando se recebeu e processou tudo direitinho.
+Pense no eSocial como o **WhatsApp do governo**. A empresa manda mensagens (chamadas de *eventos*) em um formato específico (XML), e o governo responde confirmando se recebeu e processou tudo.
 
 ---
 
 ## Glossário — O que significa cada sigla
-
-Aqui estão todas as siglas que você vai encontrar no sistema, explicadas em linguagem simples.
-
----
 
 ### Siglas do mundo real (governo e documentos)
 
@@ -48,7 +39,7 @@ Aqui estão todas as siglas que você vai encontrar no sistema, explicadas em li
 > O "CPF da empresa". Todo negócio que existe legalmente no Brasil tem um CNPJ. É um número de 14 dígitos. A Stark Industries teria algo como `12.345.678/0001-99`.
 
 **CPF** — Cadastro de Pessoas Físicas
-> O número de identificação de cada cidadão brasileiro. São 11 dígitos. O CPF de Clark Kent (funcionário) seria `123.456.789-09`.
+> O número de identificação de cada cidadão brasileiro. São 11 dígitos. O CPF de Clark Kent (Super-Homem) seria `123.456.789-09`.
 
 **ICP-Brasil** — Infraestrutura de Chaves Públicas Brasileira
 > É a entidade do governo que "reconhece firma" digitalmente. Quando Tony Stark assina um documento digital, o ICP-Brasil é quem garante que foi mesmo ele que assinou.
@@ -199,10 +190,10 @@ Aqui estão todas as siglas que você vai encontrar no sistema, explicadas em li
 > Eventos de configuração inicial, enviados uma vez ou quando mudam. Ex: cadastro da empresa (S-1000), cadastro de estabelecimentos, cargos, etc. É o "perfil" da empresa no eSocial.
 
 **Grupo 2 — Não-Periódicos do Empregador**
-> Eventos que acontecem quando algo muda: admissão (S-2200), alteração de contrato (S-2205), demissão (S-2299), acidente de trabalho, etc. Natasha Romanoff envia esses quando contrata ou demite alguém.
+> Eventos que acontecem quando algo muda: admissão (S-2200), alteração de contrato (S-2205), demissão (S-2299), acidente de trabalho, etc. Natasha Romanoff (Viúva Negra) envia esses quando contrata ou demite alguém.
 
 **Grupo 3 — Periódicos do Empregador**
-> Eventos mensais: folha de pagamento (S-1200), pagamentos de autônomos (S-1210), etc. Bruce Banner e Barry Allen geram esses todo mês.
+> Eventos mensais: folha de pagamento (S-1200), pagamentos de autônomos (S-1210), etc. Bruce Banner (Hulk) e Barry Allen (Flash) geram esses todo mês.
 
 ---
 
@@ -233,10 +224,10 @@ Aqui estão todas as siglas que você vai encontrar no sistema, explicadas em li
 Abra o navegador e acesse:
 
 ```
-http://localhost:5052/openapi/v1.json
+http://localhost:5052/swagger
 ```
 
-Se aparecer um texto técnico (JSON), o sistema está no ar. Se der erro, chame o Peter Parker.
+Se abrir o Swagger UI, o sistema está no ar.
 
 ---
 
@@ -272,7 +263,7 @@ Peter Parker abre o arquivo `appsettings.Development.json` e preenche:
 
 ### PASSO 3 — Criar e enviar um lote de eventos
 
-**Situação:** Natasha Romanoff acabou de contratar **Clark Kent** como jornalista investigativo na Stark Industries. Ela precisa informar ao governo essa admissão pelo evento **S-2200**.
+**Situação:** Natasha Romanoff (Viúva Negra) acabou de contratar **Clark Kent (Super-Homem)** como jornalista investigativo na Stark Industries. Ela precisa informar ao governo essa admissão pelo evento **S-2200**.
 
 O XML do evento S-2200 foi gerado pelo sistema de RH. Agora Peter Parker vai enviá-lo.
 
@@ -378,7 +369,7 @@ Natasha Romanoff vai precisar corrigir o CPF do Clark Kent e reenviar.
 
 ### PASSO 5 — Folha de pagamento mensal (evento periódico)
 
-Todo mês, Bruce Banner fecha a folha e Barry Allen precisa enviar os eventos S-1200 (remuneração dos empregados).
+Todo mês, Bruce Banner (Hulk) fecha a folha e Barry Allen (Flash) precisa enviar os eventos S-1200 (remuneração dos empregados).
 
 Desta vez são vários funcionários, então o lote vai ter múltiplos eventos:
 
@@ -411,7 +402,7 @@ Desta vez são vários funcionários, então o lote vai ter múltiplos eventos:
 
 ### PASSO 6 — Baixar eventos anteriores (download)
 
-Diana Prince (jurídica) precisa de uma cópia de um evento já enviado para um processo trabalhista do Clark Kent. Ela sabe o `nrRecibo` do evento.
+Diana Prince (Mulher-Maravilha), do jurídico, precisa de uma cópia de um evento já enviado para um processo trabalhista do Clark Kent (Super-Homem). Ela sabe o `nrRecibo` do evento.
 
 ```http
 POST http://localhost:5052/api/download
@@ -442,7 +433,7 @@ A resposta trará o XML original do evento, que Diana pode usar como comprovante
 
 ### PASSO 7 — Consultar eventos por tipo (identificadores)
 
-Steve Rogers quer saber quais admissões foram enviadas no mês passado para o funcionário Clark Kent.
+Steve Rogers (Capitão América) quer saber quais admissões foram enviadas no mês passado para o funcionário Clark Kent (Super-Homem).
 
 ```http
 GET /api/identificadores?tipo=Trabalhador&tipoInscricaoEmpregador=1&nrInscricaoEmpregador=12345678000195&cpfTrabalhador=12345678909&ambiente=2
@@ -484,7 +475,7 @@ STARK INDUSTRIES                          GOVERNO FEDERAL (eSocial)
 
 ### "Certificado inválido" ou "mTLS falhou"
 **O que aconteceu:** O arquivo `.pfx` não foi encontrado, a senha está errada, ou o certificado expirou.
-**O que fazer:** Chamar Tony Stark para verificar o certificado digital. Certificados têm validade (geralmente 1 ou 3 anos).
+**O que fazer:** Chamar Tony Stark (Homem de Ferro) para verificar o certificado digital. Certificados têm validade (geralmente 1 ou 3 anos).
 
 ### "cdResposta: 422" — Rejeição
 **O que aconteceu:** O governo recebeu o lote, mas encontrou erros nas informações (CPF inválido, campo obrigatório faltando, data no formato errado, etc.).

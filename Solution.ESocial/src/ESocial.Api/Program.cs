@@ -6,14 +6,26 @@ using ESocial.Infrastructure.Validation;
 using ESocial.Infrastructure.WebService.Adapters;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
-using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+
+// Swagger (Swashbuckle) — disponível apenas em Development
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "eSocial API",
+        Version = "v1",
+        Description = "API de integração com o eSocial — envio e consulta de eventos trabalhistas.",
+        Contact = new OpenApiContact { Name = "Stark Industries TI" }
+    });
+});
 
 // MediatR — registra todos os handlers do assembly Application
 builder.Services.AddMediatR(cfg =>
@@ -23,9 +35,10 @@ builder.Services.AddMediatR(cfg =>
 builder.Services.AddValidatorsFromAssembly(typeof(ESocial.Application.UseCases.EnviarLote.EnviarLoteHandler).Assembly);
 
 // EF Core + MySQL (Pomelo)
-var connectionString = builder.Configuration.GetConnectionString("Default")!;
-builder.Services.AddDbContext<ESocialDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+var connectionString = builder.Configuration.GetConnectionString("Default");
+if (!string.IsNullOrWhiteSpace(connectionString))
+    builder.Services.AddDbContext<ESocialDbContext>(options =>
+        options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0))));
 
 // Repositories
 builder.Services.AddScoped<ILoteEventosRepository, LoteEventosRepository>();
@@ -48,15 +61,17 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
     {
-        options.Title = "eSocial API";
-        options.Theme = ScalarTheme.DeepSpace;
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "eSocial API v1");
+        options.RoutePrefix = "swagger";
     });
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
+
 app.MapControllers();
 
 app.Run();

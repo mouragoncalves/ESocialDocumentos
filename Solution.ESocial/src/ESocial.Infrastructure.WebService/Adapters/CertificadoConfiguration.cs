@@ -13,8 +13,25 @@ public class CertificadoConfiguration
     public X509Certificate2 CarregarCertificado()
     {
         if (!string.IsNullOrWhiteSpace(CaminhoArquivoPfx))
-            return new X509Certificate2(CaminhoArquivoPfx, SenhaPfx,
-                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
+        {
+            if (!File.Exists(CaminhoArquivoPfx))
+                throw new InvalidOperationException(
+                    $"Arquivo de certificado não encontrado: '{Path.GetFullPath(CaminhoArquivoPfx)}'. " +
+                    "Verifique o caminho em ESocial:Certificado:CaminhoArquivoPfx no appsettings.");
+
+            try
+            {
+                return X509CertificateLoader.LoadPkcs12FromFile(
+                    CaminhoArquivoPfx, SenhaPfx,
+                    X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet);
+            }
+            catch (System.Security.Cryptography.CryptographicException ex)
+            {
+                throw new InvalidOperationException(
+                    $"Não foi possível carregar o certificado '{CaminhoArquivoPfx}': senha incorreta ou arquivo corrompido. " +
+                    "Verifique ESocial:Certificado:SenhaPfx no appsettings.", ex);
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(Thumbprint))
         {
