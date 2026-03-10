@@ -1,7 +1,7 @@
 # Manual do Sistema eSocial — Stark Industries
 
 > **Para quem é este manual?**
-> Para qualquer pessoa que terminou o ensino médio e precisa entender ou usar este sistema — mesmo sem nunca ter programado ou trabalhado com obrigações trabalhistas antes. Se você conhece os personagens da Marvel e da DC, vai se sentir em casa.
+> Para qualquer pessoa que precisa entender ou usar este sistema — trabalhado com obrigações trabalhistas antes. Se você conhece os personagens da Marvel e da DC, vai se sentir em casa.
 
 ---
 
