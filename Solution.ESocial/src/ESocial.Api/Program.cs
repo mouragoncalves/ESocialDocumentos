@@ -50,6 +50,12 @@ var certConfig = builder.Configuration
     .Get<CertificadoConfiguration>() ?? new CertificadoConfiguration();
 builder.Services.AddSingleton(certConfig);
 
+// Configuração dos webservices
+var webServiceConfig = builder.Configuration
+    .GetSection("ESocial:WebService")
+    .Get<WebServiceConfiguration>() ?? new WebServiceConfiguration();
+builder.Services.AddSingleton(webServiceConfig);
+
 // WebService adapter
 builder.Services.AddScoped<IESocialWebService, ESocialWebServiceAdapter>();
 

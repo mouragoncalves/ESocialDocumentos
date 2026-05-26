@@ -21,25 +21,21 @@ namespace ESocial.Infrastructure.WebService.Adapters;
 public class ESocialWebServiceAdapter : IESocialWebService
 {
     private readonly CertificadoConfiguration _certConfig;
+    private readonly WebServiceConfiguration _webServiceConfig;
 
-    // URLs base por ambiente
-    private static readonly Dictionary<AmbienteEnvio, string> _baseUrls = new()
-    {
-        [AmbienteEnvio.Producao] = "https://webservices.producao.esocial.gov.br/servicos/empregador",
-        [AmbienteEnvio.Homologacao] = "https://webservices.homologacao.esocial.gov.br/servicos/empregador"
-    };
-
-    public ESocialWebServiceAdapter(CertificadoConfiguration certConfig)
+    public ESocialWebServiceAdapter(CertificadoConfiguration certConfig, WebServiceConfiguration webServiceConfig)
     {
         _certConfig = certConfig ?? throw new ArgumentNullException(nameof(certConfig));
+        _webServiceConfig = webServiceConfig ?? throw new ArgumentNullException(nameof(webServiceConfig));
     }
 
     public async Task<RetornoLoteDto> EnviarLoteEventosAsync(LoteDto lote, CancellationToken cancellationToken = default)
     {
-        var url = $"{_baseUrls[lote.Ambiente]}/envio/lote/v1_1_0/ServicoEnviarLoteEventos.svc";
+        var url = _webServiceConfig.ObterUrlEnvioLote(lote.Ambiente);
         var binding = CriarBinding();
         var client = new WsEnviarLoteEventosClient(binding, new EndpointAddress(url));
         ConfigurarCertificado(client.ClientCredentials);
+        AplicarSslBypass(client);
 
         var xmlEnvio = MontarXmlEnvioLote(lote);
         var requestMsg = Message.CreateMessage(
@@ -53,10 +49,11 @@ public class ESocialWebServiceAdapter : IESocialWebService
 
     public async Task<RetornoLoteDto> ConsultarLoteEventosAsync(string protocolo, AmbienteEnvio ambiente, CancellationToken cancellationToken = default)
     {
-        var url = $"{_baseUrls[ambiente]}/consulta/lote/v1_1_0/ServicoConsultarLoteEventos.svc";
+        var url = _webServiceConfig.ObterUrlConsultaLote(ambiente);
         var binding = CriarBinding();
         var client = new WsConsultarLoteEventosClient(binding, new EndpointAddress(url));
         ConfigurarCertificado(client.ClientCredentials);
+        AplicarSslBypass(client);
 
         var xmlConsulta = MontarXmlConsultaLote(protocolo, ambiente);
         var requestMsg = Message.CreateMessage(
@@ -70,10 +67,11 @@ public class ESocialWebServiceAdapter : IESocialWebService
 
     public async Task<IReadOnlyList<string>> ConsultarIdentificadoresAsync(ConsultaIdentificadoresDto consulta, CancellationToken cancellationToken = default)
     {
-        var url = $"{_baseUrls[consulta.Ambiente]}/consulta/identificadores/v1_0_0/ServicoConsultarIdentificadoresEventos.svc";
+        var url = _webServiceConfig.ObterUrlConsultaIdentificadores(consulta.Ambiente);
         var binding = CriarBinding();
         var client = new WsConsultarIdentificadoresClient(binding, new EndpointAddress(url));
         ConfigurarCertificado(client.ClientCredentials);
+        AplicarSslBypass(client);
 
         var xmlConsulta = MontarXmlConsultaIdentificadores(consulta);
         Message responseMsg;
@@ -104,10 +102,11 @@ public class ESocialWebServiceAdapter : IESocialWebService
 
     public async Task<RetornoDownloadDto> SolicitarDownloadAsync(SolicitacaoDownloadDto solicitacao, CancellationToken cancellationToken = default)
     {
-        var url = $"{_baseUrls[solicitacao.Ambiente]}/download/solicitacao/v1_0_0/ServicoSolicitarDownloadEventos.svc";
+        var url = _webServiceConfig.ObterUrlDownload(solicitacao.Ambiente);
         var binding = CriarBinding();
         var client = new WsSolicitarDownloadClient(binding, new EndpointAddress(url));
         ConfigurarCertificado(client.ClientCredentials);
+        AplicarSslBypass(client);
 
         var xmlSolicitacao = MontarXmlSolicitacaoDownload(solicitacao);
         var action = solicitacao.Tipo == TipoDownload.PorId
@@ -129,12 +128,16 @@ public class ESocialWebServiceAdapter : IESocialWebService
     // --- Helpers ---
 
     private static BasicHttpsBinding CriarBinding()
-        => new BasicHttpsBinding(BasicHttpsSecurityMode.Transport)
+    {
+        var binding = new BasicHttpsBinding(BasicHttpsSecurityMode.Transport)
         {
-            MaxReceivedMessageSize = 10 * 1024 * 1024, // 10 MB
+            MaxReceivedMessageSize = 10 * 1024 * 1024,
             SendTimeout = TimeSpan.FromSeconds(60),
             ReceiveTimeout = TimeSpan.FromSeconds(60)
         };
+        binding.Security.Transport.ClientCredentialType = HttpClientCredentialType.Certificate;
+        return binding;
+    }
 
     private void ConfigurarCertificado(System.ServiceModel.Description.ClientCredentials? credentials)
     {
@@ -142,6 +145,12 @@ public class ESocialWebServiceAdapter : IESocialWebService
         credentials.ClientCertificate.Certificate = _certConfig.CarregarCertificado();
         credentials.ServiceCertificate.Authentication.CertificateValidationMode =
             X509CertificateValidationMode.None;
+    }
+
+    private void AplicarSslBypass<T>(System.ServiceModel.ClientBase<T> client) where T : class
+    {
+        if (_webServiceConfig.IgnorarValidacaoSslServidor)
+            client.Endpoint.EndpointBehaviors.Add(new IgnorarSslBehavior());
     }
 
     private static string MontarXmlEnvioLote(LoteDto lote)
@@ -167,11 +176,16 @@ public class ESocialWebServiceAdapter : IESocialWebService
 
     private static string MontarXmlConsultaLote(string protocolo, AmbienteEnvio ambiente)
     {
-        var ns = "http://www.esocial.gov.br/schema/lote/eventos/envio/consulta/retornoProcessamento/v1_0_0";
+        // O WSDL WsConsultarLoteEventos-v1_1_0 exige document/literal:
+        // body = <ConsultarLoteEventos><consulta><eSocial>...</eSocial></consulta></ConsultarLoteEventos>
+        var nsServico = "http://www.esocial.gov.br/servicos/empregador/lote/eventos/envio/consulta/retornoProcessamento/v1_1_0";
+        var nsSchema = "http://www.esocial.gov.br/schema/lote/eventos/envio/consulta/retornoProcessamento/v1_0_0";
         var doc = new XDocument(
-            new XElement(XName.Get("eSocial", ns),
-                new XElement(XName.Get("consultaLoteEventos", ns),
-                    new XElement(XName.Get("protocoloEnvio", ns), protocolo))));
+            new XElement(XName.Get("ConsultarLoteEventos", nsServico),
+                new XElement(XName.Get("consulta", nsServico),
+                    new XElement(XName.Get("eSocial", nsSchema),
+                        new XElement(XName.Get("consultaLoteEventos", nsSchema),
+                            new XElement(XName.Get("protocoloEnvio", nsSchema), protocolo))))));
         return doc.ToString();
     }
 

@@ -12,8 +12,13 @@
   "ESocial": {
     "Ambiente": 1,
     "Certificado": {
-      "CaminhoArquivoPfx": "/run/secrets/esocial-prod.pfx",
-      "SenhaPfx": "<PROD_CERT_PASS>"
+      "CaminhoArquivoPfx": "/Users/mmg/Downloads/INSTITUTO_ADVENTISTA_DE_ENSINO_43586056000182_2025_1.pfx",
+      "SenhaPfx": "029826"
+    },
+    "WebService": {
+      "BaseUrl": "",
+      "BaseUrlHomologacao": "",
+      "BaseUrlProducao": ""
     },
     "SchemasPath": "/app/schemas/2025-04-22/01_03_00"
   }
