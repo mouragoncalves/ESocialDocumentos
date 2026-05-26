@@ -7,5 +7,7 @@ public record ConsultarLoteResult(
     string CdResposta,
     string DescResposta,
     bool Sucesso,
-    IReadOnlyList<RetornoEventoDto>? Eventos
+    IReadOnlyList<RetornoEventoDto>? Eventos,
+    IReadOnlyList<OcorrenciaDto>? Ocorrencias = null,
+    int? TempoEstimadoConclusao = null
 );

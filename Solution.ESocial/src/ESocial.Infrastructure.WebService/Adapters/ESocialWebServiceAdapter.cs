@@ -221,20 +221,45 @@ public class ESocialWebServiceAdapter : IESocialWebService
     {
         var xml = LerXmlMensagem(responseMsg);
         var retorno = XElement.Parse(xml);
+
         var status = retorno.Descendants().FirstOrDefault(e => e.Name.LocalName == "status");
         var cdResp = status?.Descendants().FirstOrDefault(e => e.Name.LocalName == "cdResposta")?.Value ?? "000";
         var descResp = status?.Descendants().FirstOrDefault(e => e.Name.LocalName == "descResposta")?.Value ?? "";
+        var tempoEstimado = status?.Descendants().FirstOrDefault(e => e.Name.LocalName == "tempoEstimadoConclusao")?.Value;
+        var ocorrencias = ParseOcorrencias(status);
+
+        // protocoloEnvio fica em dadosRecepcaoLote > protocoloEnvio
         var protocolo = retorno.Descendants().FirstOrDefault(e => e.Name.LocalName == "protocoloEnvio")?.Value;
 
+        // Id está em <evento Id="evN">, não em <retornoEvento>
         var eventos = retorno.Descendants()
-            .Where(e => e.Name.LocalName == "retornoEvento")
+            .Where(e => e.Name.LocalName == "evento" && e.Attribute("Id") != null)
             .Select(e => new RetornoEventoDto(
-                e.Attribute("Id")?.Value ?? "",
+                e.Attribute("Id")!.Value,
                 e.Descendants().FirstOrDefault(x => x.Name.LocalName == "cdResposta")?.Value ?? "",
-                e.Descendants().FirstOrDefault(x => x.Name.LocalName == "descResposta")?.Value ?? ""))
+                e.Descendants().FirstOrDefault(x => x.Name.LocalName == "descResposta")?.Value ?? "",
+                ParseOcorrencias(e)))
             .ToList();
 
-        return new RetornoLoteDto(protocolo, cdResp, descResp, cdResp is "201" or "202", eventos);
+        return new RetornoLoteDto(
+            protocolo, cdResp, descResp,
+            cdResp is "201" or "202",
+            eventos, ocorrencias,
+            tempoEstimado is null ? null : int.TryParse(tempoEstimado, out var t) ? t : null);
+    }
+
+    private static IReadOnlyList<OcorrenciaDto>? ParseOcorrencias(XElement? container)
+    {
+        if (container is null) return null;
+        var lista = container.Descendants()
+            .Where(e => e.Name.LocalName == "ocorrencia")
+            .Select(o => new OcorrenciaDto(
+                int.TryParse(o.Descendants().FirstOrDefault(x => x.Name.LocalName == "codigo")?.Value, out var cod) ? cod : 0,
+                o.Descendants().FirstOrDefault(x => x.Name.LocalName == "descricao")?.Value ?? "",
+                byte.TryParse(o.Descendants().FirstOrDefault(x => x.Name.LocalName == "tipo")?.Value, out var tipo) ? tipo : (byte)0,
+                o.Descendants().FirstOrDefault(x => x.Name.LocalName == "localizacao")?.Value))
+            .ToList();
+        return lista.Count > 0 ? lista : null;
     }
 
     private static IReadOnlyList<string> ParseIdentificadores(Message responseMsg)

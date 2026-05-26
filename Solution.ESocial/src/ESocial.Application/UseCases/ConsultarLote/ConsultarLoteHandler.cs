@@ -35,6 +35,8 @@ public class ConsultarLoteHandler : IRequestHandler<ConsultarLoteQuery, Consulta
             retorno.CdResposta,
             retorno.DescResposta,
             retorno.Sucesso,
-            retorno.Eventos);
+            retorno.Eventos,
+            retorno.Ocorrencias,
+            retorno.TempoEstimadoConclusao);
     }
 }
