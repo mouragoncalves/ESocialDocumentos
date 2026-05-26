@@ -12,13 +12,19 @@
   "ESocial": {
     "Ambiente": 1,
     "Certificado": {
-      "CaminhoArquivoPfx": "/Users/mmg/Downloads/INSTITUTO_ADVENTISTA_DE_ENSINO_43586056000182_2025_1.pfx",
-      "SenhaPfx": "029826"
+      "CaminhoArquivoPfx": "/app/certs/ecnpj.pfx",
+      "SenhaPfx": "<SENHA_CERTIFICADO>"
     },
     "WebService": {
-      "BaseUrl": "",
-      "BaseUrlHomologacao": "",
-      "BaseUrlProducao": ""
+      "UrlEnvioLoteProducao": "",
+      "UrlEnvioLoteHomologacao": "",
+      "UrlConsultaLoteProducao": "",
+      "UrlConsultaLoteHomologacao": "",
+      "UrlConsultaIdentificadoresProducao": "",
+      "UrlConsultaIdentificadoresHomologacao": "",
+      "UrlDownloadProducao": "",
+      "UrlDownloadHomologacao": "",
+      "IgnorarValidacaoSslServidor": false
     },
     "SchemasPath": "/app/schemas/2025-04-22/01_03_00"
   }
