@@ -41,6 +41,8 @@ public class LoteEventosConfiguration : IEntityTypeConfiguration<LoteEventos>
             protocolo.Property(p => p.Valor)
                 .HasColumnName("protocolo")
                 .HasMaxLength(60);
+
+            protocolo.HasIndex(p => p.Valor);
         });
 
         builder.OwnsOne(l => l.StatusProcessamento, sp =>
@@ -57,6 +59,5 @@ public class LoteEventosConfiguration : IEntityTypeConfiguration<LoteEventos>
         builder.Ignore(l => l.DomainEvents);
 
         builder.HasIndex(l => l.EmpregadorId);
-        builder.HasIndex("Protocolo_Valor");
     }
 }

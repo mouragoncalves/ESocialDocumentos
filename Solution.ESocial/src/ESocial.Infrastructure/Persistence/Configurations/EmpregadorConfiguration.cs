@@ -31,8 +31,8 @@ public class EmpregadorConfiguration : IEntityTypeConfiguration<Empregador>
                 .HasColumnName("nr_inscricao")
                 .HasMaxLength(14)
                 .IsRequired();
-        });
 
-        builder.HasIndex("Inscricao_NrInscricao").IsUnique();
+            inscricao.HasIndex(i => i.Numero).IsUnique();
+        });
     }
 }
